@@ -1,0 +1,52 @@
+use web3::contract::{Contract, Options};
+use web3::types::{Address, U256};
+
+fn deploy_smart_contract() -> Result<Address, Box<dyn std::error::Error>> {
+    // Connect to the Ethereum network
+    let (_eloop, transport) = web3::transports::Http::new("https://mainnet.infura.io/v3/your-project-id")?;
+    let web3 = web3::Web3::new(transport);
+
+    // Define the smart contract ABI
+    let abi = "[
+        {
+            \"inputs\": [],
+            \"name\": \"get_greeting\",
+            \"outputs\": [
+                {
+                    \"internalType\": \"string\",
+                    \"name\": \"\",
+                    \"type\": \"string\"
+                }
+            ],
+            \"stateMutability\": \"view\",
+            \"type\": \"function\"
+        },
+        {
+            \"inputs\": [
+                {
+                    \"internalType\": \"string\",
+                    \"name\": \"_greeting\",
+                    \"type\": \"string\"
+                }
+            ],
+            \"name\": \"set_greeting\",
+            \"outputs\": [],
+            \"stateMutability\": \"nonpayable\",
+            \"type\": \"function\"
+        }
+    ]";
+
+    // Define the smart contract bytecode
+    let bytecode = "0x608060405234801561001057600080fd5b5061017f806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806360fe47b114602d575b600080fd5b60336035565b005b60456046565b60408051918252519081900360200190f35b6000805490509056fea2646970667358221220f1f2f2c1c6f6b8b0e5b6d7a7f3e9d6f6c5b8b9b1a0d7d2f5e5c9d5e9e5a3f4e64736f6c63430007060033";
+    
+    // Deploy the smart contract
+    let contract = Contract::deploy(web3.eth(), abi.as_bytes())?
+        .confirmations(1)
+        .options(Options::with(|opt| opt.gas = Some(5_000_000.into())))
+        .execute(bytecode.as_bytes())?;
+
+    // Get the smart contract address
+    let address = contract.address();
+
+    Ok(address)
+}
